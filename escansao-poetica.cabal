@@ -33,6 +33,8 @@ executable escansao-poetica
                      , aeson
                      , text
                      , wai-cors
+                     , containers
+                     , split
 
   ghc-options:         -Wall
                        -Wcompat
@@ -47,3 +49,23 @@ executable escansao-poetica
 source-repository head
   type:     git
   location: https://github.com/githubuser/escansao-poetica
+
+test-suite escansao-poetica-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+                       src
+  main-is:             Spec.hs
+  other-modules:       Acentuacao
+                     , AnaliseLexical
+                     , Escansao
+                     , PreProcessamento
+                     , Silabacao
+                     , Tipos
+  build-depends:       base >= 4.7 && < 5
+                     , hspec
+                     , text
+                     , aeson
+                     , containers
+                     , split
+  default-language:    Haskell2010
+  ghc-options:         -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N

@@ -8,30 +8,35 @@ import GHC.Generics
 import Control.Monad.IO.Class (liftIO)
 
 -- Middleware CORS para o Front-end não reclamar
-import Network.Wai.Middleware.Cors (cors, simpleCorsResourcePolicy, corsRequestHeaders, corsMethods)
+import Network.Wai.Middleware.Cors (cors, simpleCorsResourcePolicy, simpleCors, corsRequestHeaders, corsMethods)
 
 import Escansao (escandirVerso)
 import TiposJSON 
+import Silabacao (carregarDicionario, Dicionario) -- Importe o carregador
 
-main :: IO ()
-main = scotty 3000 $ do
-    -- SUBSTITUIÇÃO DO CORS AQUI:
-    -- Em vez de 'middleware simpleCors', usamos uma política customizada
-    middleware $ cors (const $ Just policy)
+main = do
+    -- 1. Carrega o dicionário ANTES de subir o servidor
+    putStrLn "Carregando dicionário de exceções..."
+    dicionario <- carregarDicionario "assets/excecoes.txt"
+    putStrLn "Dicionário carregado!"
 
-    post "/escandir" $ do
-        request <- jsonData :: ActionM PoemaRequest
-        let textoPoema = poema request
-        let linhas = filter (not . null) (lines textoPoema)
-        let versosProcessados = map processarVerso linhas
-        
-        let resposta = PoemaResultado
-                { versos = versosProcessados
-                , totalVersos = length versosProcessados
-                , resumoGeral = "Análise concluída com sucesso."
-                }
-        
-        json resposta
+    scotty 3000 $ do
+        middleware (cors (const $ Just policy))
+
+        post "/escandir" $ do
+            request <- jsonData :: ActionM PoemaRequest
+            let textoPoema = poema request
+            let linhas = filter (not . null) (lines textoPoema)
+            
+            -- 2. Passa o 'dicionario' carregado para a função de escansão
+            let versosProcessados = map (processarVerso dicionario) linhas
+            
+            let resposta = PoemaResultado
+                    { versos = versosProcessados
+                    , totalVersos = length versosProcessados
+                    , resumoGeral = "OK"
+                    }
+            json resposta
 
 -- | Definição da Política de CORS
 policy = simpleCorsResourcePolicy
@@ -40,11 +45,11 @@ policy = simpleCorsResourcePolicy
     }
 
 -- | Converte a string bruta e a análise em um Objeto Rico
-processarVerso :: String -> VersoResultado
-processarVerso v = 
-    let 
+processarVerso :: Dicionario -> String -> VersoResultado
+processarVerso dic v =
+      let 
         -- O motor devolve: ["mi", "nha-ter", "ra", "tem*", ...]
-        escansaoBruta = escandirVerso v
+        escansaoBruta = escandirVerso dic v -- Passa o dic aqui
         
         -- Converte cada string em um objeto SilabaDetalhada
         objsSilabas = map criarObjetoSilaba escansaoBruta

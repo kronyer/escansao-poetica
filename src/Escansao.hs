@@ -3,7 +3,7 @@ module Escansao (escandirVerso, VersoEscandido) where
 import Tipos (Som(..))
 import AnaliseLexical (classificar)
 import PreProcessamento (tokenizarVerso)
-import Silabacao (separarSilabas)
+import Silabacao (separarSilabas, Dicionario) -- Importe o tipo Dicionario
 import Acentuacao (identificarIndiceTonica)
 import Data.Char (toLower)
 import Data.List (isSuffixOf) -- Import necessário para detectar o final "à*"
@@ -18,14 +18,14 @@ data PalavraProcessada = PalavraProcessada
     } deriving (Show)
 
 -- | Função Principal
-escandirVerso :: String -> VersoEscandido
-escandirVerso versoRaw =
+escandirVerso :: Dicionario -> String -> VersoEscandido
+escandirVerso dic versoRaw =
     let
         -- 1. Limpa e separa palavras
         listaPalavrasStr = tokenizarVerso versoRaw
 
         -- 2. Analisa cada palavra individualmente (silabação + tônica)
-        palavrasAnalisadas = map analisarPalavra listaPalavrasStr
+        palavrasAnalisadas = map (analisarPalavra dic) listaPalavrasStr
 
         -- 3. Aplica o CORTE (descarta sílabas após a tônica da última palavra)
         palavrasCortadas = aplicarCorteFinal palavrasAnalisadas
@@ -39,25 +39,27 @@ escandirVerso versoRaw =
         versoFinal
 
 -- | Analisa palavra e marca Tônica (*) e Pausa Forte (#)
-analisarPalavra :: String -> PalavraProcessada
-analisarPalavra sRaw =
+analisarPalavra :: Dicionario -> String -> PalavraProcessada
+analisarPalavra dic sRaw =
     let
         -- 1. Pausa Forte: Só ! ? . ; : (A vírgula já sumiu no PreProcessamento)
         sinaisFortes = ".!?;:"
         temPausaForte = any (`elem` sinaisFortes) sRaw
+        
 
         -- 2. Limpa a pontuação para o silabador
         sLimpa = filter (\c -> c /= '#' && not (c `elem` sinaisFortes)) sRaw
 
         -- 3. Silabação e Tônica
-        sils = separarSilabas sLimpa
-        idx  = identificarIndiceTonica sils
+        silsGramaticais = separarSilabas dic sLimpa
+        silsPoeticas = aplicarSinerese silsGramaticais
+        idx  = identificarIndiceTonica silsPoeticas
 
         -- 4. Marcação (* e #)
         silsMarcadas = zipWith (\i sil ->
             let comEstrela = if i == idx then sil ++ "*" else sil
-            in if temPausaForte && i == (length sils - 1) then comEstrela ++ "#" else comEstrela
-            ) [0..] sils
+            in if temPausaForte && i == (length silsPoeticas - 1) then comEstrela ++ "#" else comEstrela
+            ) [0..] silsPoeticas
 
     in PalavraProcessada { silabas = silsMarcadas, idxTonica = idx }
 
@@ -108,6 +110,35 @@ aplicarCorteFinal [ultima] =
         -- Nota: Se cortamos, a tônica passa a ser a última sílaba desta palavra.
     in [ultima { silabas = novasSilabas }]
 aplicarCorteFinal (p:ps) = p : aplicarCorteFinal ps
+
+-- | Transforma Hiato Gramatical em Ditongo Poético (Sinérese)
+-- Regra: Se uma sílaba termina em vogal fraca (i, u) e a próxima começa com vogal.
+-- EXCEÇÃO CRÍTICA: Não junta se a anterior já for um Ditongo Decrescente (Forte+Fraca).
+-- Ex: 'dei-as' não vira 'deias'. 'mei-a' não vira 'meia'. 'tua' vira 'tua'.
+aplicarSinerese :: [String] -> [String]
+aplicarSinerese [] = []
+aplicarSinerese [x] = [x]
+aplicarSinerese (s1:s2:resto) =
+    let
+        -- Verifica se termina em i/u
+        terminaFraca = not (null s1) && last s1 `elem` "iuüIUÜ"
+        
+        -- Verifica se a letra ANTERIOR à última é uma vogal Forte (a,e,o).
+        -- Se for, s1 é um ditongo (dei, lei, pai) e não deve atrair a próxima sílaba.
+        penultimaLetra = if length s1 >= 2 then last (init s1) else 'z' -- 'z' é placeholder consoante
+        ehDitongoDecrescente = terminaFraca && penultimaLetra `elem` "aáàãâeéêoóõô"
+        
+        -- Verifica se s2 começa com vogal
+        comecaVogal = not (null s2) && classificar (head s2) == Vogal
+        
+        proximaAcentuada = head s2 `elem` "áéíóúâêô"
+    in
+        -- Só une se NÃO for ditongo decrescente antes
+        if terminaFraca && comecaVogal && not proximaAcentuada && not ehDitongoDecrescente
+        then 
+            aplicarSinerese ((s1 ++ s2) : resto) -- UNE (tu + a -> tua)
+        else 
+            s1 : aplicarSinerese (s2 : resto)    -- SEPARA (dei + as -> dei, as)
 
 -- | LÓGICA DE SINALEFA REFINADA
 aplicarSinalefa :: [PalavraProcessada] -> [String]
