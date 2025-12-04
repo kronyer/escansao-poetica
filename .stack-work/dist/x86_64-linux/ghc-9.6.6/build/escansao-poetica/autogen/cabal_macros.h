@@ -10,6 +10,16 @@
   (major1) == 0 && (major2) <  1 || \
   (major1) == 0 && (major2) == 1 && (minor) <= 0)
 #endif /* MIN_VERSION_escansao_poetica */
+/* package aeson-2.1.2.1 */
+#ifndef VERSION_aeson
+#define VERSION_aeson "2.1.2.1"
+#endif /* VERSION_aeson */
+#ifndef MIN_VERSION_aeson
+#define MIN_VERSION_aeson(major1,major2,minor) (\
+  (major1) <  2 || \
+  (major1) == 2 && (major2) <  1 || \
+  (major1) == 2 && (major2) == 1 && (minor) <= 2)
+#endif /* MIN_VERSION_aeson */
 /* package base-4.18.2.1 */
 #ifndef VERSION_base
 #define VERSION_base "4.18.2.1"
@@ -20,6 +30,36 @@
   (major1) == 4 && (major2) <  18 || \
   (major1) == 4 && (major2) == 18 && (minor) <= 2)
 #endif /* MIN_VERSION_base */
+/* package scotty-0.20.1 */
+#ifndef VERSION_scotty
+#define VERSION_scotty "0.20.1"
+#endif /* VERSION_scotty */
+#ifndef MIN_VERSION_scotty
+#define MIN_VERSION_scotty(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  20 || \
+  (major1) == 0 && (major2) == 20 && (minor) <= 1)
+#endif /* MIN_VERSION_scotty */
+/* package text-2.0.2 */
+#ifndef VERSION_text
+#define VERSION_text "2.0.2"
+#endif /* VERSION_text */
+#ifndef MIN_VERSION_text
+#define MIN_VERSION_text(major1,major2,minor) (\
+  (major1) <  2 || \
+  (major1) == 2 && (major2) <  0 || \
+  (major1) == 2 && (major2) == 0 && (minor) <= 2)
+#endif /* MIN_VERSION_text */
+/* package wai-cors-0.2.7 */
+#ifndef VERSION_wai_cors
+#define VERSION_wai_cors "0.2.7"
+#endif /* VERSION_wai_cors */
+#ifndef MIN_VERSION_wai_cors
+#define MIN_VERSION_wai_cors(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  2 || \
+  (major1) == 0 && (major2) == 2 && (minor) <= 7)
+#endif /* MIN_VERSION_wai_cors */
 
 /* tool gcc-14 */
 #ifndef TOOL_VERSION_gcc
@@ -113,7 +153,7 @@
 #endif /* MIN_TOOL_VERSION_strip */
 
 #ifndef CURRENT_COMPONENT_ID
-#define CURRENT_COMPONENT_ID "escansao-poetica-0.1.0.0-9MStEAB0D4cG7mINl1QKvh-escansao-poetica"
+#define CURRENT_COMPONENT_ID "escansao-poetica-0.1.0.0-G4LusFLfMsZ8ye4yES5WHE-escansao-poetica"
 #endif /* CURRENT_COMPONENT_ID */
 #ifndef CURRENT_PACKAGE_VERSION
 #define CURRENT_PACKAGE_VERSION "0.1.0.0"

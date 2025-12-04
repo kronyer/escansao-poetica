@@ -47,7 +47,7 @@ getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: 
 
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 bindir     = "/home/pedro/Documentos/Estudo/escansao-poetica/.stack-work/install/x86_64-linux/bf057d41f7600277f787fa5860451340296e39e35339aea029e229277e91682f/9.6.6/bin"
-libdir     = "/home/pedro/Documentos/Estudo/escansao-poetica/.stack-work/install/x86_64-linux/bf057d41f7600277f787fa5860451340296e39e35339aea029e229277e91682f/9.6.6/lib/x86_64-linux-ghc-9.6.6/escansao-poetica-0.1.0.0-9MStEAB0D4cG7mINl1QKvh-escansao-poetica"
+libdir     = "/home/pedro/Documentos/Estudo/escansao-poetica/.stack-work/install/x86_64-linux/bf057d41f7600277f787fa5860451340296e39e35339aea029e229277e91682f/9.6.6/lib/x86_64-linux-ghc-9.6.6/escansao-poetica-0.1.0.0-G4LusFLfMsZ8ye4yES5WHE-escansao-poetica"
 dynlibdir  = "/home/pedro/Documentos/Estudo/escansao-poetica/.stack-work/install/x86_64-linux/bf057d41f7600277f787fa5860451340296e39e35339aea029e229277e91682f/9.6.6/lib/x86_64-linux-ghc-9.6.6"
 datadir    = "/home/pedro/Documentos/Estudo/escansao-poetica/.stack-work/install/x86_64-linux/bf057d41f7600277f787fa5860451340296e39e35339aea029e229277e91682f/9.6.6/share/x86_64-linux-ghc-9.6.6/escansao-poetica-0.1.0.0"
 libexecdir = "/home/pedro/Documentos/Estudo/escansao-poetica/.stack-work/install/x86_64-linux/bf057d41f7600277f787fa5860451340296e39e35339aea029e229277e91682f/9.6.6/libexec/x86_64-linux-ghc-9.6.6/escansao-poetica-0.1.0.0"

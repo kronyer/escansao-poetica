@@ -6,6 +6,7 @@ import PreProcessamento (tokenizarVerso)
 import Silabacao (separarSilabas)
 import Acentuacao (identificarIndiceTonica)
 import Data.Char (toLower)
+import Data.List (isSuffixOf) -- Import necessário para detectar o final "à*"
 
 -- O resultado final é uma lista de sílabas poéticas (strings)
 type VersoEscandido = [String]
@@ -30,7 +31,10 @@ escandirVerso versoRaw =
         palavrasCortadas = aplicarCorteFinal palavrasAnalisadas
         
         -- 4. Aplica SINALEFA (une final de uma com começo da outra)
-        versoFinal = aplicarSinalefa palavrasCortadas
+        versoComSinalefa = aplicarSinalefa palavrasCortadas
+
+        -- 5. resolver choques tonicos
+        versoFinal = resolverChoqueAcentos versoComSinalefa
     in
         versoFinal
 
@@ -45,6 +49,18 @@ analisarPalavra s =
         
     in PalavraProcessada { silabas = silsMarcadas, idxTonica = idx }
 
+
+-- | Remove o acento da sílaba anterior se houver duas tônicas seguidas
+resolverChoqueAcentos :: [String] -> [String]
+resolverChoqueAcentos [] = []
+resolverChoqueAcentos [x] = [x]
+resolverChoqueAcentos (s1:s2:resto)
+    | temEstrela s1 && temEstrela s2 = removerEstrela s1 : resolverChoqueAcentos (s2:resto)
+    | otherwise                      = s1 : resolverChoqueAcentos (s2:resto)
+    where
+        temEstrela s = not (null s) && last s == '*'
+        removerEstrela s = init s -- Remove o '*' do final
+
 -- | Regra do Corte: Remove as sílabas pós-tônicas da ÚLTIMA palavra
 aplicarCorteFinal :: [PalavraProcessada] -> [PalavraProcessada]
 aplicarCorteFinal [] = []
@@ -57,41 +73,44 @@ aplicarCorteFinal [ultima] =
     in [ultima { silabas = novasSilabas }]
 aplicarCorteFinal (p:ps) = p : aplicarCorteFinal ps
 
--- | Regra da Sinalefa: Percorre as palavras e une se necessário
+-- | LÓGICA DE SINALEFA REFINADA
 aplicarSinalefa :: [PalavraProcessada] -> [String]
 aplicarSinalefa [] = []
-aplicarSinalefa [p] = silabas p -- Só uma palavra? Retorna suas sílabas.
+aplicarSinalefa [p] = silabas p
 aplicarSinalefa (p1:p2:resto) =
     let 
         sils1 = silabas p1
         sils2 = silabas p2
-        
         ultimaSilabaP1 = last sils1
         primeiraSilabaP2 = head sils2
         
-        -- Verificações para Sinalefa
-        -- 1. A última da P1 é átona? (Índice da última != Índice da Tônica)
-        p1TerminaAtona = (length sils1 - 1) /= idxTonica p1
+        -- Verifica se P1 é átona (não tem '*')
+        p1EhAtona = not (null ultimaSilabaP1) && last ultimaSilabaP1 /= '*'
         
-        -- 2. Encontro vocálico? (Termina com Vogal + Começa com Vogal)
-        -- Nota: Usamos a função 'classificar' do seu léxico
-        terminaVogal = classificar (last ultimaSilabaP1) == Vogal
+        -- Verifica se é CRASE (à* ou ás*) ou termina em crase (do-à*)
+        -- Se for crase, permitimos a fusão mesmo sendo tônica!
+        ehCrase = "à*" `isSuffixOf` ultimaSilabaP1 || "ás*" `isSuffixOf` ultimaSilabaP1
+        
+        -- Encontros vocálicos
+        terminaVogal = classificar (last (filter (/= '*') ultimaSilabaP1)) == Vogal
         comecaVogal  = classificar (head primeiraSilabaP2) == Vogal
         
-        deveUnir = p1TerminaAtona && terminaVogal && comecaVogal
+        -- Regra de União: Átona+Vogal OU Crase+Vogal
+        deveUnir = (p1EhAtona || ehCrase) && terminaVogal && comecaVogal
     in
         if deveUnir then
-            -- UNE: Pega todas as sílabas de P1 menos a última
-            -- E cria uma nova sílaba fundida (ultimaP1 + "-" + primeiraP2)
-            -- E continua recursivamente tratando a P2 modificada como a nova "cabeça"
             let 
                 inicioP1 = init sils1
-                fusao = ultimaSilabaP1 ++ "-" ++ primeiraSilabaP2 -- Usamos '-' para marcar visualmente
                 
-                -- Criamos uma nova "P2" artificial que começa com a fusão
+                -- TRUQUE DE MESTRE:
+                -- Se estamos unindo, removemos o acento da anterior (mesmo se for crase).
+                -- Isso evita o "Stress Clash" com a próxima palavra e permite tripla sinalefa (do-à-e).
+                p1Limpa = filter (/= '*') ultimaSilabaP1
+                fusao = p1Limpa ++ "-" ++ primeiraSilabaP2
+                
+                -- A nova palavra P2 herda a fusão na cabeça
                 novaP2 = p2 { silabas = fusao : tail sils2 } 
             in
                 inicioP1 ++ aplicarSinalefa (novaP2 : resto)
         else
-            -- NÃO UNE: Segue normal
             sils1 ++ aplicarSinalefa (p2 : resto)

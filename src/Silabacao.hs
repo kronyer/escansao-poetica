@@ -67,44 +67,36 @@ deveSepararVogais v1 v2
     | ehForte v1 && ehAcentuada v2 = True -- Forte + Í/Ú Tônico (pa-ís)
     | ehFraca v1 && ehAcentuada v2 = True -- Fraca + Acentuada (sa-bi-á)
     | otherwise = False                   -- Ditongos
-    
--- | O Motor de Pattern Matching
+
+-- | MOTOR DE PATTERN MATCHING
 quebrar :: [LetraSom] -> [[LetraSom]]
 quebrar [] = []
 
--- REGRA 1: Hiatos (Vogal-Vogal)
--- Se temos duas vogais seguidas, verificamos se elas se separam.
+-- REGRA 1: Hiatos Simples (V-V)
 quebrar ((l1, Vogal) : (l2, Vogal) : resto)
     | deveSepararVogais l1 l2 = [(l1, Vogal)] : quebrar ((l2, Vogal) : resto)
-    -- Se não separa (Ditongo), deixa cair no Caso Base (que agrupa)
 
--- REGRA 2: Encontros Consonantais Inseparáveis (V-CCV)
--- Ex: pe-dra, li-vro, fi-lho.
--- Se temos Vogal, depois C, depois C, depois Vogal...
--- E as duas consoantes formam um cluster... quebramos ANTES da primeira consoante.
+-- REGRA 1.5 [NOVA]: Hiato após Ditongo Decrescente (Tritongo falso)
+-- Ex: idei-a, mei-a, joi-a. (Forte + Fraca + Vogal)
+-- Se não fizermos isso, ele agrupa tudo (ideia) ou separa errado.
+-- Ação: Agrupa (Forte, Fraca) e separa da próxima Vogal.
+quebrar ((l1, Vogal) : (l2, Vogal) : (l3, Vogal) : resto)
+    | ehForte l1 && ehFraca l2 = [(l1, Vogal), (l2, Vogal)] : quebrar ((l3, Vogal) : resto)
+
+-- REGRA 2: Cluster (V-CCV)
 quebrar ((l1, Vogal) : (c1, Consoante) : (c2, Consoante) : (l2, Vogal) : resto)
     | ehCluster c1 c2 = [(l1, Vogal)] : quebrar ((c1, Consoante) : (c2, Consoante) : (l2, Vogal) : resto)
 
--- REGRA 1: V - CV (Ex: a-mo, ca-sa)
--- Se temos Vogal, depois Consoante, depois Vogal... quebramos antes da Consoante.
+-- REGRA 3: V-CV
 quebrar ((l1, Vogal) : (l2, Consoante) : (l3, Vogal) : resto) = 
     [(l1, Vogal)] : quebrar ((l2, Consoante) : (l3, Vogal) : resto)
 
-    -- REGRA 0: Dígrafos Inseparáveis (lh, nh, ch) [NOVA REGRA]
--- Se temos Vogal, depois uma consoante (l, n ou c), depois 'h', depois Vogal...
--- Nós NÃO separamos. Jogamos tudo para a próxima sílaba (comportamento V-CV).
-quebrar ((l1, Vogal) : (c1, Consoante) : ('h', Consoante) : (l3, Vogal) : resto)
-    | c1 `elem` "lnc" = [(l1, Vogal)] : quebrar ((c1, Consoante) : ('h', Consoante) : (l3, Vogal) : resto)
-
--- REGRA 2: VC - CV (Ex: can-to, res-to)
--- Se temos Vogal, Consoante, Consoante, Vogal... quebramos no meio das Consoantes.
+-- REGRA 4: VC-CV
 quebrar ((l1, Vogal) : (l2, Consoante) : (l3, Consoante) : (l4, Vogal) : resto) =
     [(l1, Vogal), (l2, Consoante)] : quebrar ((l3, Consoante) : (l4, Vogal) : resto)
 
--- CASO BASE (Default):
--- Se nenhuma regra acima casou, pegamos a letra atual e tentamos agrupar com a próxima
--- (Isso vai "arrastar" as letras até encontrar um ponto de quebra ou acabar a palavra)
+-- CASO BASE
 quebrar (x:xs) = 
     case quebrar xs of
-        []       -> [[x]]            -- Se acabou, retorna só x
+        []       -> [[x]]
         (s:resto) -> (x:s) : resto
