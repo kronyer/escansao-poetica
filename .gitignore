@@ -1,0 +1,52 @@
+dist
+dist-*
+cabal-dev
+*.o
+*.hi
+*.hie
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+*.prof
+*.aux
+*.hp
+*.eventlog
+.stack-work/
+cabal.project.local
+cabal.project.local~
+.HTF/
+.ghc.environment.*
+
+
+# Stack build artifacts
+.stack-work/
+*.stack-snapshot/
+
+# Cabal build artifacts
+dist/
+dist-*/
+cabal-dev/
+
+# Compiled Haskell files
+*.o
+*.hi
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+
+# HPC coverage files
+.hpc
+
+# Executables
+*.exe
+*.dll
+
+# Other common ignored files
+.DS_Store
+.ghci
